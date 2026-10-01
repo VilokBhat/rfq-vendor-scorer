@@ -18,6 +18,11 @@ Design decisions, scoring approach and trade-offs are in [BUILD_LOG.md](BUILD_LO
 - Python 3.9 or newer
 - An Anthropic API key: <https://console.anthropic.com/settings/keys>
 
+> **Windows:** clone into a short path such as `C:\dev\rfq-vendor-scorer`. The
+> `anthropic` package contains very long file names, and inside a deeply nested
+> folder `pip install` fails with `OSError: [Errno 2] No such file or directory`
+> (Windows' 260-character path limit) unless long paths are enabled.
+
 ## Setup
 
 Run every command from the repository root.
