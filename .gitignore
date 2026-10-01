@@ -2,7 +2,7 @@
 .env
 
 # Local SQLite database (recreated and seeded on first run)
-*.db
+# *.db
 
 # Python
 .venv/
