@@ -1,0 +1,78 @@
+[
+  {
+    "id": "RFQ-001",
+    "title": "Precision CNC Machining, Aluminium Structural Brackets",
+    "category": "Machining",
+    "quantity": "250 units",
+    "material": "7075-T6 aluminium, supplied free-issue",
+    "delivery": "6 weeks from PO",
+    "technical": [
+      "Tolerance +/-0.02 mm on critical features",
+      "Surface finish Ra 1.6",
+      "5-axis machining capability"
+    ],
+    "mandatory": [
+      "AS9100D certification"
+    ],
+    "required": [
+      "CMM inspection with first-article inspection report per AS9102",
+      "Material traceability to mill test certificate"
+    ],
+    "preferred": [
+      "In-house CMM",
+      "Prior aerospace structural work",
+      "NADCAP-accredited subcontractors for any outsourced process steps"
+    ]
+  },
+  {
+    "id": "RFQ-002",
+    "title": "Surface Treatment, Chemical Conversion Coating",
+    "category": "Special Process",
+    "quantity": "Batch sizes 50-400 units",
+    "material": "Aluminium components, chromate conversion coating per MIL-DTL-5541 Type II Class 1A",
+    "delivery": "10 working days turnaround",
+    "technical": [
+      "Coating per MIL-DTL-5541 Type II Class 1A",
+      "Parts up to 600 mm"
+    ],
+    "mandatory": [
+      "NADCAP accreditation for Chemical Processing"
+    ],
+    "required": [
+      "Certificate of conformance per batch",
+      "Salt spray test reports on request",
+      "RoHS-compliant process chemistry"
+    ],
+    "preferred": [
+      "Co-located with machining capability",
+      "Experience with space-grade hardware",
+      "Ability to handle parts up to 600 mm"
+    ]
+  },
+  {
+    "id": "RFQ-003",
+    "title": "Raw Material Supply, Titanium Sheet and Plate",
+    "category": "Raw Material",
+    "quantity": "Approx. 2 tonnes per year against a rate contract",
+    "material": "Ti-6Al-4V Grade 5, AMS 4911 sheet, 1.0-6.0 mm",
+    "delivery": "Call-off against rate contract",
+    "technical": [
+      "AMS 4911 specification",
+      "Thickness range 1.0-6.0 mm",
+      "Cut-to-size capability"
+    ],
+    "mandatory": [
+      "Mill test certificates traceable to heat lot"
+    ],
+    "required": [
+      "ISO 9001 certified",
+      "Ability to supply cut-to-size",
+      "DFARS-compliant sourcing documentation"
+    ],
+    "preferred": [
+      "Existing stock holding in India",
+      "Prior supply to space or defence programmes",
+      "Consignment stocking arrangement"
+    ]
+  }
+]

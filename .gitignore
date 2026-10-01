@@ -1,0 +1,10 @@
+# Secrets - API keys live in .env, never in git
+.env
+
+# Local SQLite database (recreated and seeded on first run)
+*.db
+
+# Python
+.venv/
+__pycache__/
+*.pyc

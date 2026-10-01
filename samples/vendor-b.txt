@@ -1,0 +1,41 @@
+VENDOR PROFILE
+
+Company: Arcline Aerospace Components
+Location: Hosur, Tamil Nadu
+Established: 2016
+Employees: 19
+
+CAPABILITIES
+
+Machining of aluminium and mild steel components for aerospace ground support
+equipment, tooling and non-flight hardware. Four CNC machines: two 3-axis
+vertical machining centres and two CNC lathes. No 5-axis capability; complex
+geometries are handled through multi-setup 3-axis work with fixturing.
+
+Demonstrated working tolerance +/-0.05 mm. Surface finish typically Ra 3.2 as
+machined; better finishes require outsourced grinding or polishing.
+
+Experience with 6061 aluminium. Limited 7075 experience — two prototype jobs
+to date, both under 20 pieces.
+
+QUALITY
+
+AS9100D certified (valid to August 2027).
+ISO 9001:2015 certified.
+
+No in-house CMM. Dimensional inspection by height gauge, micrometer and go/no-go
+gauges. CMM work is outsourced to a NABL-accredited laboratory in Bangalore,
+adding two to three working days per inspection cycle. AS9102 first-article
+reports prepared in-house using outsourced measurement data.
+
+Full material traceability to mill test certificate, maintained under the
+AS9100 quality system.
+
+CAPACITY AND DELIVERY
+
+Single shift, five days. Current utilisation approximately 90%. Typical lead
+time for batches above 100 pieces is 9 to 11 weeks.
+
+REFERENCES
+
+Two aerospace GSE manufacturers. Largest single order to date: 120 pieces.
