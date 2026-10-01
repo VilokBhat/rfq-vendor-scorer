@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RFQ Vendor Scorer</title>
+<style>
+  :root {
+    --text: #1b1d21; --muted: #5d6470; --line: #d9dde3; --panel: #f6f7f9; --bg: #ffffff;
+    --strong: #1d7a46; --possible: #6b7d12; --weak: #a86400; --poor: #b3261e; --ineligible: #b3261e;
+  }
+  body { font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--text); background: var(--bg);
+         max-width: 980px; margin: 0 auto; padding: 16px 16px 64px; }
+  h1 { margin: 8px 0 0; } h2 { margin-top: 40px; } h3 { margin: 20px 0 6px; font-size: 1rem; }
+  section { margin-top: 24px; }
+  label { display: block; font-weight: 600; margin-bottom: 6px; }
+  select, textarea { width: 100%; box-sizing: border-box; font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: 6px; }
+  textarea { font: 14px/1.45 ui-monospace, Consolas, monospace; }
+  button { font: inherit; font-weight: 600; padding: 8px 20px; border-radius: 6px; border: 0; background: #1f4fd1; color: #fff; cursor: pointer; }
+  button:disabled { opacity: .55; cursor: progress; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+  .muted { color: var(--muted); font-size: .9rem; }
+  .error { color: var(--poor); font-weight: 600; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; }
+  .score-line { display: flex; gap: 16px; align-items: center; }
+  .score { font-size: 2.2rem; font-weight: 700; min-width: 4.5ch; }
+  .score.small { font-size: 1rem; min-width: 3ch; display: inline-block; }
+  .strong { color: var(--strong); } .possible { color: var(--possible); } .weak { color: var(--weak); }
+  .poor, .ineligible { color: var(--poor); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; margin-top: 8px; }
+  th, td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  td.status { font-weight: 600; white-space: nowrap; }
+  .met { color: var(--strong); } .partial { color: var(--weak); } .not_met, .not_stated { color: var(--poor); }
+  details { margin-top: 8px; } summary { cursor: pointer; }
+  details.past { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin-top: 8px; }
+  details.past > summary { font-weight: 500; }
+  pre { white-space: pre-wrap; font-size: .85rem; background: var(--panel); padding: 8px; border-radius: 6px; }
+  .table-wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<h1>RFQ Vendor Scorer</h1>
+<p class="muted">Pick an RFQ, paste or upload a vendor profile, and get an alignment score with the reasoning behind it.</p>
+
+<section>
+  <label for="rfq">RFQ</label>
+  <select id="rfq"></select>
+  <details class="panel" id="rfq-details"><summary>Show RFQ requirements</summary><div id="rfq-body"></div></details>
+</section>
+
+<section>
+  <label for="profile">Vendor profile</label>
+  <div class="row"><input type="file" id="file" accept=".txt,.md,text/plain"><span class="muted">or paste below</span></div>
+  <textarea id="profile" rows="14" placeholder="Paste the vendor profile text here"></textarea>
+  <div class="row"><button id="evaluate">Evaluate</button><span id="status" role="status"></span></div>
+</section>
+
+<section id="result" hidden></section>
+
+<h2>Past evaluations</h2>
+<div id="history"><p class="muted">Loading...</p></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const STATUS_TEXT = { met: "Met", partial: "Partial", not_met: "Not met", not_stated: "Not stated" };
+let rfqs = [];
+
+// Build DOM nodes. All text goes through textContent / append, never innerHTML,
+// because vendor profiles and model output are untrusted.
+function el(tag, props = {}, ...children) {
+  const node = Object.assign(document.createElement(tag), props);
+  for (const child of children.flat()) if (child != null) node.append(child);
+  return node;
+}
+
+async function api(path, options) {
+  const res = await fetch(path, options);
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.detail || `${res.status} ${res.statusText}`);
+  return body;
+}
+
+function setStatus(text, isError = false) {
+  $("status").textContent = text;
+  $("status").className = isError ? "error" : "muted";
+}
+
+// SQLite stores UTC "YYYY-MM-DD HH:MM:SS"; show it in the viewer's local time.
+const when = (s) => new Date(s.replace(" ", "T") + "Z").toLocaleString();
+
+// --- RFQs -------------------------------------------------------------------
+
+async function loadRfqs() {
+  rfqs = await api("/api/rfqs");
+  $("rfq").replaceChildren(...rfqs.map((r) => el("option", { value: r.id, textContent: `${r.id} - ${r.title}` })));
+  showRfq();
+}
+
+function showRfq() {
+  const rfq = rfqs.find((r) => r.id === $("rfq").value);
+  if (!rfq) return;
+  const list = (title, items) => items && items.length
+    ? [el("h3", { textContent: title }), el("ul", {}, items.map((i) => el("li", { textContent: i })))] : [];
+  $("rfq-body").replaceChildren(
+    el("p", {}, el("strong", { textContent: rfq.title })),
+    el("p", { className: "muted", textContent: `Quantity: ${rfq.quantity} | Material: ${rfq.material} | Delivery: ${rfq.delivery}` }),
+    ...list("Mandatory", rfq.mandatory), ...list("Required", rfq.required),
+    ...list("Technical", rfq.technical), ...list("Preferred", rfq.preferred),
+  );
+}
+
+// --- Rendering an evaluation --------------------------------------------------
+
+function criteriaTable(criteria) {
+  return el("div", { className: "table-wrap" }, el("table", {},
+    el("thead", {}, el("tr", {}, ["", "Criterion", "Verdict", "Evidence from the profile"].map((h) => el("th", { textContent: h })))),
+    el("tbody", {}, criteria.map((c) => el("tr", {},
+      el("td", { textContent: c.id }),
+      el("td", {}, c.text, el("div", { className: "muted", textContent: c.category })),
+      el("td", { className: `status ${c.status}`, textContent: STATUS_TEXT[c.status] },
+        c.model_status ? el("div", { className: "muted", textContent: `Model said ${STATUS_TEXT[c.model_status]}, but its quote is not in the profile` }) : null),
+      el("td", {}, c.evidence ? el("q", { textContent: c.evidence }) : null, el("div", { className: "muted", textContent: c.note })),
+    ))),
+  ));
+}
+
+function renderEvaluation(ev) {
+  const capped = ev.score < ev.raw_score;
+  return el("div", { className: "panel" },
+    el("div", { className: "score-line" },
+      el("span", { className: `score ${ev.fit.band}`, textContent: `${ev.score}/100` }),
+      el("div", {},
+        el("strong", { className: ev.fit.band, textContent: ev.fit.label }),
+        el("div", { className: "muted", textContent: `${ev.vendor_name} vs ${ev.rfq_id} (${ev.rfq_title})` }),
+        capped ? el("div", { className: "muted", textContent: `Scores ${ev.raw_score}/100 on capability, capped at ${ev.score} because a mandatory requirement is not evidenced.` }) : null,
+      ),
+    ),
+    el("h3", { textContent: "Why this score" }), el("ol", {}, ev.reasons.map((t) => el("li", { textContent: t }))),
+    el("h3", { textContent: "Gaps" }), el("ul", {}, ev.gaps.map((t) => el("li", { textContent: t }))),
+    el("details", {}, el("summary", { textContent: "Criterion-by-criterion breakdown" }), criteriaTable(ev.criteria)),
+    el("p", { className: "muted", textContent: `Evaluated ${when(ev.created_at)} with ${ev.model}` }),
+  );
+}
+
+// --- History ------------------------------------------------------------------
+
+async function loadHistory() {
+  const evaluations = await api("/api/evaluations");
+  if (!evaluations.length) {
+    $("history").replaceChildren(el("p", { className: "muted", textContent: "No evaluations yet." }));
+    return;
+  }
+  $("history").replaceChildren(...evaluations.map((ev) => el("details", { className: "past" },
+    el("summary", {},
+      el("span", { className: `score small ${ev.fit.band}`, textContent: ev.score }),
+      ` ${ev.vendor_name}  |  ${ev.rfq_id}  |  ${ev.fit.label}  |  ${when(ev.created_at)}`),
+    renderEvaluation(ev),
+    el("details", {}, el("summary", { textContent: "Submitted vendor profile" }), el("pre", { textContent: ev.vendor_profile })),
+  )));
+}
+
+// --- Events -------------------------------------------------------------------
+
+$("rfq").addEventListener("change", showRfq);
+
+$("file").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (file) $("profile").value = await file.text();
+});
+
+$("evaluate").addEventListener("click", async () => {
+  const profile = $("profile").value.trim();
+  if (!profile) return setStatus("Paste or upload a vendor profile first.", true);
+
+  $("evaluate").disabled = true;
+  setStatus("Evaluating... this usually takes 20-60 seconds.");
+  try {
+    const ev = await api("/api/evaluations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rfq_id: $("rfq").value, vendor_profile: profile }),
+    });
+    $("result").replaceChildren(el("h2", { textContent: "Result" }), renderEvaluation(ev));
+    $("result").hidden = false;
+    setStatus("");
+    await loadHistory();
+  } catch (err) {
+    setStatus(err.message, true);
+  } finally {
+    $("evaluate").disabled = false;
+  }
+});
+
+Promise.all([loadRfqs(), loadHistory()]).catch((err) => setStatus(`Could not load data: ${err.message}`, true));
+</script>
+</body>
+</html>

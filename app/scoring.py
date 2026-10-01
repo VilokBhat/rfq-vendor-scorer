@@ -66,13 +66,20 @@ def compute_score(assessed: List[Dict[str, Any]]) -> Dict[str, Any]:
     return {"score": score, "raw_score": raw_score, "mandatory_met": mandatory_met}
 
 
-def fit_label(score: int, mandatory_met: bool) -> str:
+# (minimum score, band, label) - checked top to bottom.
+FIT_BANDS = [
+    (80, "strong", "Strong fit"),
+    (60, "possible", "Possible fit - gaps to close"),
+    (40, "weak", "Weak fit"),
+    (0, "poor", "Poor fit"),
+]
+
+
+def fit(score: int, mandatory_met: bool) -> Dict[str, str]:
+    """Plain-language reading of the score, shown next to the number."""
     if not mandatory_met:
-        return "Not eligible - mandatory requirement not evidenced"
-    if score >= 80:
-        return "Strong fit"
-    if score >= 60:
-        return "Possible fit - gaps to close"
-    if score >= 40:
-        return "Weak fit"
-    return "Poor fit"
+        return {"band": "ineligible", "label": "Not eligible - mandatory requirement not evidenced"}
+    for threshold, band, label in FIT_BANDS:
+        if score >= threshold:
+            return {"band": band, "label": label}
+    return {"band": "poor", "label": "Poor fit"}

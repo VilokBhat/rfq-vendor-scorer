@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app import db, evaluator
-from app.scoring import fit_label
+from app.scoring import fit
 from app.seed import seed_if_empty
 
 load_dotenv(db.ROOT / ".env")
@@ -37,7 +37,7 @@ class EvaluationRequest(BaseModel):
 
 
 def _present(ev: Dict[str, Any]) -> Dict[str, Any]:
-    return {**ev, "label": fit_label(ev["score"], ev["mandatory_met"])}
+    return {**ev, "fit": fit(ev["score"], ev["mandatory_met"])}
 
 
 @app.get("/")
